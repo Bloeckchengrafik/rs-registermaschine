@@ -1,12 +1,10 @@
 <script lang="ts">
-    import {editorTabs, workspace} from "../stores";
-    import {fileAbsoluteToRelative} from "../utils";
+    import { currentTab, editorTabs, workspace } from "../stores";
+    import { fileAbsoluteToRelative } from "../utils";
     import Editor from "./Editor.svelte";
 
-    let currentTab = 0;
-
     $: if ($editorTabs.length === 0) {
-        currentTab = -1;
+        $currentTab = -1;
     }
 
     export let w = 0;
@@ -16,18 +14,28 @@
 <div class="flex flex-col w-full h-full">
     <div class="tabs w-full border-b border-b-neutral">
         {#each $editorTabs as tab, i}
-            <button class="tab" class:tab-active={i === currentTab} on:click={() => currentTab = i}>
+            <button
+                class="tab"
+                class:tab-active={i === $currentTab}
+                on:click={() => ($currentTab = i)}
+            >
                 {fileAbsoluteToRelative($workspace, tab)}
-                <button class="ml-1 show-on-hover-parent" on:click={() =>{
-                $editorTabs.splice(i, 1);
-                if (i === currentTab) {
-                    currentTab = 0;
-                }
+                <button
+                    class="ml-1 show-on-hover-parent"
+                    on:click|stopPropagation={() => {
+                        $editorTabs.splice(i, 1);
+                        $editorTabs = [...$editorTabs];
+                        if (i === $currentTab) {
+                            $currentTab = 0;
+                        } else if (i < $currentTab) {
+                            $currentTab--;
+                        }
 
-                if ($editorTabs.length === 0) {
-                    currentTab = -1;
-                }
-            }}>&times;
+                        if ($editorTabs.length === 0) {
+                            $currentTab = -1;
+                        }
+                    }}
+                    >&times;
                 </button>
             </button>
         {/each}
@@ -36,9 +44,13 @@
         {/if}
     </div>
     <div class="flex-grow">
-        {#if currentTab !== -1}
+        {#if $currentTab !== -1}
             <div class="flex flex-col items-center justify-center h-full">
-                <Editor file={$editorTabs[currentTab]} w={w} h={Math.max(0, h-33)}/>
+                <Editor
+                    file={$editorTabs[$currentTab]}
+                    {w}
+                    h={Math.max(0, h - 33)}
+                />
             </div>
         {:else}
             <div class="flex flex-col items-center justify-center h-full">

@@ -11,10 +11,26 @@
   },
   "tauri": {
     "allowlist": {
-      "all": false,
+      "all": true,
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true
+      },
+      "fs": {
+        "scope": [
+          "**"
+        ]
       }
     },
     "bundle": {
@@ -36,9 +52,10 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "rs-registermaschine",
+        "title": "Registermaschinen-Editor",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "decorations": false
       }
     ]
   }

@@ -3,14 +3,14 @@
     // @ts-ignore
     import {HSplitPane, VSplitPane} from 'svelte-split-pane';
     import Navbar from "./lib/Navbar.svelte";
-    import Sidebar from "./lib/Sidebar.svelte";
+    import Sidebar from "./lib/fileExplorer/Sidebar.svelte";
     import MainContent from "./lib/MainContent.svelte";
     import Terminal from "./lib/Terminal.svelte";
     import Footer from "./lib/Footer.svelte";
     import {workspace} from "./stores";
     import {onDestroy, onMount} from "svelte";
 
-    let loading = true
+    let loading = false
     let w = 0;
     let h = 0;
     let stop = false;

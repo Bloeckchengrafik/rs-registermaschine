@@ -1,4 +1,5 @@
 import "./app.pcss";
+import "@sweetalert2/theme-borderless/borderless.min.css";
 import App from "./App.svelte";
 
 const app = new App({

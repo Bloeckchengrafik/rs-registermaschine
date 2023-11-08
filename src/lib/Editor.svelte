@@ -1,26 +1,37 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+    import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
     import Monaco from "./Monaco.svelte";
-    import {onMount} from "svelte";
 
     export let file: string;
-    let monaco: Monaco;
     export let w = 0;
     export let h = 0;
 
-    let content = `
-loop:
-    LOAD 1
-    ADD #1
-    STORE 1
-
-    LOAD 1
-    JNZERO loop
-    END
-`
-
+    let text = ``;
+    let loaded = false;
     onMount(() => {
-        // monaco.loadCode(content, "mySpecialLanguage");
-    })
+        readTextFile(file).then((t) => {
+            text = t;
+            loaded = true;
+        });
+    });
+
+    let timeout: any = null;
+    function save(data: string) {
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+
+        timeout = setTimeout(() => {
+            timeout = null;
+            writeTextFile(file, data);
+            console.log("Saved");
+        }, 500);
+    }
+
+    $: if (loaded) save(text);
 </script>
 
-<Monaco bind:this={monaco} w={w} {h} />
+{#if loaded}
+    <Monaco {w} {h} bind:text />
+{/if}

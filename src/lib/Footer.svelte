@@ -1,12 +1,7 @@
 <script lang="ts">
     import {currentFile, workspace} from "../stores";
     import {GitBranch, GitCommit} from "phosphor-svelte";
-    import {fileAbsoluteToRelative} from "../utils";
-
-    function workspaceUrlToName(url: string): string {
-        const parts = url.split("/");
-        return parts[parts.length - 1];
-    }
+    import {fileAbsoluteToRelative, workspaceUrlToName} from "../utils";
 
 </script>
 
