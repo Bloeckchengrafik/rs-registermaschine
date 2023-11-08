@@ -42,6 +42,7 @@
             }
         };
 
+
         monaco.languages.register({id: "mySpecialLanguage"});
 
         // Register a tokens provider for the language
@@ -119,6 +120,184 @@
                     ]
                 ],
             }
+        });
+
+        monaco.languages.registerCompletionItemProvider("mySpecialLanguage", {
+            provideCompletionItems: (model, position) => {
+                let word = model.getWordUntilPosition(position);
+                let fullLine = model.getLineContent(position.lineNumber);
+                let fullText = model.getValue();
+                let range = {
+                    startLineNumber: position.lineNumber,
+                    endLineNumber: position.lineNumber,
+                    startColumn: word.startColumn,
+                    endColumn: word.endColumn,
+                };
+
+                function generateSuggestionForKeywords(keywords: string[]) {
+                    // A keyword can be suggested if there was either the start of a new line or a : and then an arbitrary amount of whitespace before the cursor
+
+                    let lineUntilWordBeginning = fullLine.substring(0, word.startColumn - 1);
+                    let lineUntilWordBeginningTrimmed = lineUntilWordBeginning.trim();
+                    if (lineUntilWordBeginningTrimmed.length > 0 && !lineUntilWordBeginningTrimmed.endsWith(":")) {
+                        return [];
+                    }
+
+                    return keywords.map((keyword) => {
+                        return {
+                            label: keyword,
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: keyword,
+                            range: range,
+                        };
+                    });
+                }
+
+                function generateLabelSuggestions() {
+                    let labels = fullText.match(/[a-z_$][\w$]*:/g);
+                    if (!labels) {
+                        return [];
+                    }
+
+                    // Left of a label, there has to be a [GOTO, JZERO, JNZERO]
+                    let lineUntilWordBeginning = fullLine.substring(0, word.startColumn - 1);
+                    let lineUntilWordBeginningTrimmed = lineUntilWordBeginning.trim();
+                    if (!lineUntilWordBeginningTrimmed.endsWith("GOTO") && !lineUntilWordBeginningTrimmed.endsWith("JZERO") && !lineUntilWordBeginningTrimmed.endsWith("JNZERO")) {
+                        return [];
+                    }
+
+                    return labels.map((label) => {
+                        return {
+                            label: label.substring(0, label.length - 1),
+                            kind: monaco.languages.CompletionItemKind.Field,
+                            insertText: label.substring(0, label.length - 1),
+                            range: range,
+                        };
+                    });
+                }
+
+                function generateDefineSuggestions() {
+                    let defines = fullText.match(/#define\s+[a-z_$][\w$]*/g);
+                    if (!defines) {
+                        return [];
+                    }
+
+                    // Left of a defined value, there has to be any token except END
+                    let lineUntilWordBeginning = fullLine.substring(0, word.startColumn - 1);
+                    let lineUntilWordBeginningTrimmed = lineUntilWordBeginning.trim();
+                    const tokens = ["LOAD", "STORE", "ADD", "SUB", "MUL", "DIV", "GOTO", "JNZERO", "JZERO"];
+                    if (lineUntilWordBeginningTrimmed.length === 0 || !tokens.some(token => lineUntilWordBeginningTrimmed.toLowerCase().endsWith(token.toLowerCase()))) {
+                        console.log(lineUntilWordBeginningTrimmed, tokens.some(token => lineUntilWordBeginningTrimmed.toLowerCase().endsWith(token.toLowerCase())))
+                        return [];
+                    }
+
+                    return defines.map((define) => {
+                        return {
+                            label: "Defined Value: " + define.substring(8),
+                            kind: monaco.languages.CompletionItemKind.Field,
+                            insertText: define.substring(8),
+                            range: range,
+                        };
+                    });
+                }
+
+                let suggestions = [
+                    ...generateSuggestionForKeywords(["LOAD", "STORE", "ADD", "SUB", "MUL", "DIV", "GOTO", "JNZERO", "JZERO", "END"]),
+                    ...generateLabelSuggestions(),
+                    ...generateDefineSuggestions(),
+                ];
+                return { suggestions: suggestions };
+            },
+        });
+
+        monaco.languages.registerHoverProvider("mySpecialLanguage", {
+            provideHover: function (model, position) {
+                // Hovering over a keyword shows the description of the keyword
+                let word = model.getWordAtPosition(position)
+                if (!word) {
+                    return null;
+                }
+                let keywords: {
+                    [key: string]: string
+                } = {
+                    "LOAD": "Lädt den Wert aus dem Parameter in den Akkumulator",
+                    "STORE": "Speichert den Wert aus dem Akkumulator in den Parameter",
+                    "ADD": "Addiert den Wert aus dem Parameter zum Akkumulator",
+                    "SUB": "Subtrahiert den Wert aus dem Parameter vom Akkumulator. Der Akkumulator wird auf 0 gesetzt, wenn der Wert negativ ist",
+                    "MUL": "Multipliziert den Wert aus dem Parameter mit dem Akkumulator",
+                    "DIV": "Dividiert den Wert aus dem Parameter durch den Akkumulator",
+                    "GOTO": "Springt zu dem Label",
+                    "JZERO": "Springt zu dem Label, wenn der Akkumulator 0 ist",
+                    "JNZERO": "Springt zu dem Label, wenn der Akkumulator nicht 0 ist",
+                    "END": "Beendet das Programm",
+                }
+
+                if (Object.keys(keywords).includes(word.word)) {
+                    console.log(word.word)
+                    return {
+                        range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
+                        contents: [
+                            { value: "**Beschreibung des Keywords**" },
+                            { value: keywords[word.word] }
+                        ]
+                    };
+                }
+
+                // Hovering over a define shows the value of the define
+                let defines = model.findMatches("#define " + word.word, true, true, false, null, true);
+                if (defines.length > 0) {
+                    let define = defines[0];
+                    return {
+                        range: new monaco.Range(define.range.startLineNumber, define.range.startColumn, define.range.endLineNumber, define.range.endColumn),
+                        contents: [
+                            { value: "**Define**" },
+                            { value: "Define `" + word.word + "` in Zeile " + define.range.startLineNumber + ":\n\n`" + model.getLineContent(define.range.startLineNumber) + "`" },
+                        ]
+                    };
+                }
+
+                // Hovering over a label shows the line of the label
+                let labels = model.findMatches(word.word + ":", true, true, false, null, true);
+                if (labels.length > 0) {
+                    let label = labels[0];
+                    return {
+                        range: new monaco.Range(label.range.startLineNumber, label.range.startColumn, label.range.endLineNumber, label.range.endColumn),
+                        contents: [
+                            { value: "**Label**" },
+                            { value: "Label `" + word.word + "` in Zeile " + label.range.startLineNumber + ":\n\n`" + model.getLineContent(label.range.startLineNumber) + "`" },
+                        ]
+                    };
+                }
+
+                // Hovering over #define shows description of #define
+                if (word.word === "define") {
+                    return {
+                        range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
+                        contents: [
+                            { value: "**Compiler-Direktive define**" },
+                            { value: "Mit der Compiler-Direktive `#define` können Werte definiert werden, die dann im Code verwendet werden können. Dies ist besonders nützlich, wenn ein Wert mehrmals verwendet wird und sich dieser Wert ändern kann. So muss der Wert nur an einer Stelle geändert werden." },
+                            { value: "Die Direktive wird wie folgt verwendet: `#define <name> <wert>`" },
+                            { value: "Beispiel: `#define test 1`" },
+                            { value: "Der Wert kann dann wie folgt verwendet werden: `LOAD test`" },
+                        ]
+                    }
+                }
+
+                // Hovering over #include shows description of #include
+                if (word.word === "include") {
+                    return {
+                        range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
+                        contents: [
+                            { value: "**Compiler-Direktive include**" },
+                            { value: "Mit der Compiler-Direktive `#include` können andere Dateien in die aktuelle Datei eingebunden werden. Dies ist besonders nützlich, wenn Code mehrfach verwendet wird. Die Datei wird im selben Ordner wie die Quelldatei gesucht." },
+                            { value: "Die Direktive wird wie folgt verwendet: `#include <dateiname>`" },
+                            { value: "Beispiel: `#include test.rm`" },
+                        ]
+                    }
+                }
+
+                return null;
+            },
         });
 
         // Define a new theme that contains only rules that match this language

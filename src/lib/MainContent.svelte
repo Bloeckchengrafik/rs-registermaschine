@@ -18,7 +18,12 @@
         {#each $editorTabs as tab, i}
             <button class="tab" class:tab-active={i === currentTab} on:click={() => currentTab = i}>
                 {fileAbsoluteToRelative($workspace, tab)}
-                <button class="ml-1 show-on-hover-parent" on:click={() =>{
+                <button class="ml-1 show-on-hover-parent" on:click|stopPropagation={() =>{
+                    let old = currentTab;
+                    currentTab = -1;
+                    setTimeout(() => currentTab = old, 100);
+
+                    return;
                 $editorTabs.splice(i, 1);
                 if (i === currentTab) {
                     currentTab = 0;
