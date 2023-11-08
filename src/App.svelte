@@ -1,39 +1,73 @@
 <script lang="ts">
-  import Greet from './lib/Greet.svelte'
+    import Preloader from "./lib/Preloader.svelte";
+    // @ts-ignore
+    import {HSplitPane, VSplitPane} from 'svelte-split-pane';
+    import Navbar from "./lib/Navbar.svelte";
+    import Sidebar from "./lib/Sidebar.svelte";
+    import MainContent from "./lib/MainContent.svelte";
+    import Terminal from "./lib/Terminal.svelte";
+    import Footer from "./lib/Footer.svelte";
+    import {workspace} from "./stores";
+    import {onDestroy, onMount} from "svelte";
+
+    let loading = true
+    let w = 0;
+    let h = 0;
+    let stop = false;
+    let wrapperElement: HTMLDivElement;
+
+
+    function resizeCheck() {
+        if (stop) return;
+        if (!wrapperElement) {
+            requestAnimationFrame(resizeCheck);
+            return;
+        }
+        const { width, height } = wrapperElement.getBoundingClientRect();
+        if (w !== width || h !== height) {
+            w = width;
+            h = height;
+        }
+        requestAnimationFrame(resizeCheck);
+    }
+
+    onMount(resizeCheck)
+    onDestroy(() => stop = true)
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri!</h1>
+<Preloader bind:loading/>
 
-  <div class="row">
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-
-  <p>
-    Click on the Tauri, Vite, and Svelte logos to learn more.
-  </p>
-
-  <div class="row">
-    <Greet />
-  </div>
-
-
-</main>
-
-<style>
-  .logo.vite:hover {
-    filter: drop-shadow(0 0 2em #747bff);
-  }
-
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00);
-  }
-</style>
+{#if !$workspace}
+    <!-- Message "Loading" -->
+    <div class="w-full h-full flex justify-center items-center">
+        <div class="text-2xl text-neutral">Loading...</div>
+    </div>
+{:else}
+    <div class="w-full h-full grid" style="grid-template-rows: 2.5rem auto 2.5rem">
+        <div class="h-10 bg-neutral">
+            <Navbar/>
+        </div>
+        <div class="flex-grow flex h-full max-w-[100vw]" style="max-height: calc(100vh - 5rem)">
+            <VSplitPane topPanelSize="70%" downPanelSize="30%" minTopPaneSize="300px" minDownPaneSize="100px">
+                <div class="h-full" slot="top">
+                    <HSplitPane leftPaneSize="15%" rightPaneSize="85%" minLeftPaneSize="300px" minRightPaneSize="300px">
+                        <div class="h-full" slot="left">
+                            <Sidebar/>
+                        </div>
+                        <div class="h-full" slot="right" bind:this={wrapperElement}>
+                            <MainContent {w} {h}/>
+                        </div>
+                    </HSplitPane>
+                </div>
+                <div class="flex-grow flex h-full" slot="down">
+                    <div class="flex-grow">
+                        <Terminal/>
+                    </div>
+                </div>
+            </VSplitPane>
+        </div>
+        <div class="h-10 bg-neutral">
+            <Footer/>
+        </div>
+    </div>
+{/if}
