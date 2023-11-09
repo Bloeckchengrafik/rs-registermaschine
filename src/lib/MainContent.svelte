@@ -46,11 +46,13 @@
     <div class="flex-grow">
         {#if $currentTab !== -1}
             <div class="flex flex-col items-center justify-center h-full">
-                <Editor
-                    file={$editorTabs[$currentTab]}
-                    {w}
-                    h={Math.max(0, h - 33)}
-                />
+                {#key $editorTabs[$currentTab]}
+                    <Editor
+                        file={$editorTabs[$currentTab]}
+                        {w}
+                        h={Math.max(0, h - 33)}
+                    />
+                {/key}
             </div>
         {:else}
             <div class="flex flex-col items-center justify-center h-full">

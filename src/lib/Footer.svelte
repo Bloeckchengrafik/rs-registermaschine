@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {currentFile, workspace} from "../stores";
+    import {workspace, currentTab, editorTabs} from "../stores";
     import {GitBranch, GitCommit} from "phosphor-svelte";
     import {fileAbsoluteToRelative, workspaceUrlToName} from "../utils";
 
@@ -12,8 +12,8 @@
                 <li><div class="w-2 h-2 rounded-sm bg-secondary mx-2"></div> Unknown</li>
             {:else}
                 <li><div class="w-2 h-2 rounded-sm bg-accent mx-2"></div> {workspaceUrlToName($workspace)}</li>
-                {#if $currentFile != null}
-                    {#each fileAbsoluteToRelative($workspace, $currentFile).split("/") as data}
+                {#if $currentTab != -1}
+                    {#each fileAbsoluteToRelative($workspace, $editorTabs[$currentTab]).split("/") as data}
                         <li>{data}</li>
                     {/each}
                 {/if}

@@ -1,3 +1,28 @@
-load:
-    ADD 1
-    GOTO 
+#define a 1
+
+    LOAD #2
+    STORE 2
+
+loop:
+    LOAD 2
+    ADD #1
+    STORE 
+
+    LOAD *2
+    JZERO normalEnd
+
+    SUB 1
+    JZERO gotOne
+
+    LOAD #0
+    END
+
+gotOne:
+    LOAD a
+    ADD #1
+    STORE 1
+    GOTO loop
+
+normalEnd:
+    LOAD #1
+    END
