@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { CaretDown, CaretRight, FileCode } from "phosphor-svelte";
-    import { currentTab, editorTabs, expandedFiles, workspace } from "../../stores";
-    import { fpPos, makeSureEndsInSlash } from "../../utils";
+    import {CaretDown, CaretRight, FileCode} from "phosphor-svelte";
+    import {currentTab, editorTabs, expandedFiles, workspace} from "../../stores";
+    import {fpPos, makeSureEndsInSlash} from "../../utils";
     import FileContextMenu from "./FileContextMenu.svelte";
 
     export let values: string[];
@@ -32,7 +32,7 @@
     let contextMenuIsFolder = false;
 </script>
 
-<div class="ml-1 pl-2" class:indicator-left={currentBasepath != ""}>
+<div class="ml-1 pl-2" class:indicator-left={currentBasepath !== ""}>
     {#each values.filter((x) => isFirstLevelFolder(x)) as value}
         <button
             class="flex items-center space-x-1 w-full fpbutton"
@@ -40,15 +40,14 @@
                 let fullValue = currentBasepath + value;
                 if ($expandedFiles.includes(fullValue)) {
                     $expandedFiles = $expandedFiles.filter(
-                        (x) => x != fullValue
+                        (x) => x !== fullValue
                     );
                 } else {
                     $expandedFiles = [...$expandedFiles, fullValue];
                 }
             }}
             on:contextmenu|preventDefault={(event) => {
-                let fullFilePath = makeSureEndsInSlash($workspace) + currentBasepath + value;
-                contextMenuPath = fullFilePath;
+                contextMenuPath = makeSureEndsInSlash($workspace) + currentBasepath + value;
                 contextMenuIsFolder = true;
                 showContextMenu = true;
                 contextMenuX = event.clientX;
@@ -85,8 +84,7 @@
             }
         }}
         on:contextmenu|preventDefault={(event) => {
-            let fullFilePath = makeSureEndsInSlash($workspace) + currentBasepath + value;
-            contextMenuPath = fullFilePath;
+            contextMenuPath = makeSureEndsInSlash($workspace) + currentBasepath + value;
             contextMenuIsFolder = false;
             showContextMenu = true;
             contextMenuX = event.clientX;

@@ -2,10 +2,10 @@
     import Preloader from "./lib/Preloader.svelte";
     // @ts-ignore
     import {HSplitPane, VSplitPane} from 'svelte-split-pane';
-    import Navbar from "./lib/Navbar.svelte";
+    import Navbar from "./lib/navbar/Navbar.svelte";
     import Sidebar from "./lib/fileExplorer/Sidebar.svelte";
-    import MainContent from "./lib/MainContent.svelte";
-    import Terminal from "./lib/Terminal.svelte";
+    import MainContent from "./lib/editor/MainContent.svelte";
+    import Terminal from "./lib/terminal/Terminal.svelte";
     import Footer from "./lib/Footer.svelte";
     import {workspace} from "./stores";
     import {onDestroy, onMount} from "svelte";

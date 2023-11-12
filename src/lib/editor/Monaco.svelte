@@ -8,6 +8,7 @@
     import CssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
     import HtmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
     import TsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
+    import {cancelExecution} from "../../stores";
 
     let editorElement: HTMLDivElement;
     let wrapperElement: HTMLDivElement;
@@ -20,6 +21,8 @@
 
     let lastTextForeignSet = 0;
     let lastTextLocalSet = 0;
+
+    let destroyHighlight = () => {}
 
     export function loadCode(code: string, language: string) {
         model = monaco.editor.createModel(code, language);
@@ -489,12 +492,15 @@
         loadCode(text, "mySpecialLanguage");
         editor.focus();
         editor.onDidChangeModelContent(() => {
+            destroyHighlight()
+            $cancelExecution()
             text = editor.getValue();
             lastTextLocalSet = Date.now();
         });
     });
 
     onDestroy(() => {
+        destroyHighlight()
         monaco?.editor.getModels().forEach((model) => model.dispose());
         disposes.forEach((dispose) => dispose());
         editor?.dispose();
@@ -513,6 +519,21 @@
             editor.layout({ width: w, height: h });
         }
     }
+
+    export const highlightSingleLine = (id: number) => {
+        destroyHighlight()
+        editor?.revealLine(id);
+        let collection = editor?.createDecorationsCollection([
+            {
+                range: new monaco.Range(id, 1, id, 1),
+                options: {
+                    isWholeLine: true,
+                    linesDecorationsClassName: "highlight-line",
+                },
+            },
+        ])
+        destroyHighlight = () => collection.set([]);
+    };
 </script>
 
 <div class="flex flex-col flex-grow w-full h-full" bind:this={wrapperElement}>

@@ -29,11 +29,17 @@ export function workspaceUrlToName(url: string): string {
 }
 
 function workspaceUrlToNameUnix(url: string): string {
+    if (url.endsWith("/")) {
+        url = url.substring(0, url.length - 1);
+    }
     const parts = url.split("/");
     return parts[parts.length - 1];
 }
 
 function workspaceUrlToNameNt(url: string): string {
+    if (url.endsWith("\\")) {
+        url = url.substring(0, url.length - 1);
+    }
     const parts = url.split("\\");
     return parts[parts.length - 1];
 }

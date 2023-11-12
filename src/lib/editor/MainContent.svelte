@@ -1,14 +1,33 @@
 <script lang="ts">
-    import { currentTab, editorTabs, workspace } from "../stores";
-    import { fileAbsoluteToRelative } from "../utils";
+    import {currentTab, editorApiRef, editorTabs, workspace} from "../../stores";
+    import { fileAbsoluteToRelative } from "../../utils";
     import Editor from "./Editor.svelte";
 
     $: if ($editorTabs.length === 0) {
         $currentTab = -1;
     }
 
+    let editor: Editor | null = null;
+
     export let w = 0;
     export let h = 0;
+
+    editorApiRef.set({
+        showFile(path: string, line: number): void {
+            const index = $editorTabs.findIndex((tab) => tab === path);
+            if (index === -1) {
+                $editorTabs.push(path);
+                $editorTabs = [...$editorTabs];
+                $currentTab = $editorTabs.length - 1;
+            } else {
+                $currentTab = index;
+            }
+
+            setTimeout(() => {
+                editor?.highlightSingleLine(line);
+            }, 100);
+        }
+    })
 </script>
 
 <div class="flex flex-col w-full h-full">
@@ -49,6 +68,7 @@
                 {#key $editorTabs[$currentTab]}
                     <Editor
                         file={$editorTabs[$currentTab]}
+                        bind:this={editor}
                         {w}
                         h={Math.max(0, h - 33)}
                     />

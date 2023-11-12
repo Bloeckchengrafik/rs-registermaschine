@@ -6,6 +6,12 @@
     export let file: string;
     export let w = 0;
     export let h = 0;
+    
+    let editor: any = null;
+    
+    export const highlightSingleLine = (id: number) => {
+        editor?.highlightSingleLine(id);
+    };
 
     let text = ``;
     let loaded = false;
@@ -33,5 +39,5 @@
 </script>
 
 {#if loaded}
-    <Monaco {w} {h} bind:text />
+    <Monaco {w} {h} bind:text bind:this={editor} />
 {/if}

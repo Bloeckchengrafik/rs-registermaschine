@@ -11,6 +11,7 @@
 
     export let fullFp: string;
     export let isFolder: boolean;
+    export let isRoot: boolean = false;
 
     let name = fullFp.split("/").pop()!.split("\\").pop();
     if (isFolder) {
@@ -26,19 +27,19 @@
 <div class="shadow bg-neutral rounded">
     <div class="flex items-center px-2 pt-2 space-x-2">
         {#if isFolder}
-            <FolderDashed class="w-6 h-6" />
+            <FolderDashed class="w-6 h-6"/>
         {:else}
-            <FileCode class="w-6 h-6" />
+            <FileCode class="w-6 h-6"/>
         {/if}
         <span class="text-md font-normal text-white">{name}</span>
     </div>
-    <div class="my-2 bg-slate-400 h-[1px] w-full" />
+    <div class="my-2 bg-slate-400 h-[1px] w-full"/>
 
     <div class="flex justify-center flex-col px-2 pb-2 space-y-1">
         {#if isFolder}
             <button
-                class="flex items-center space-x-1 fpbutton"
-                on:click={async () => {
+                    class="flex items-center space-x-1 fpbutton"
+                    on:click={async () => {
                     // ask ther user for a name
                     // create a new file with that name
                     let answer = Swal.fire({
@@ -66,12 +67,12 @@
                     });
                 }}
             >
-                <FilePlus class="w-6 h-6" />
+                <FilePlus class="w-6 h-6"/>
                 <span class="text-md font-normal text-white">Neue Datei</span>
             </button>
             <button
-                class="flex items-center space-x-1 fpbutton"
-                on:click={async () => {
+                    class="flex items-center space-x-1 fpbutton"
+                    on:click={async () => {
                     // ask ther user for a name
                     // create a new folder with that name
                     let answer = Swal.fire({
@@ -93,16 +94,17 @@
                     let name = (await answer).value;
                     let fullName = fullFp + name;
 
-                    createDir(fullName);
+                    await createDir(fullName);
                 }}
             >
-                <FolderPlus class="w-6 h-6" />
+                <FolderPlus class="w-6 h-6"/>
                 <span class="text-md font-normal text-white">Neuer Ordner</span>
             </button>
         {/if}
-        <button
-            class="flex items-center space-x-1 fpbutton"
-            on:click={async () => {
+        {#if !isRoot}
+            <button
+                    class="flex items-center space-x-1 fpbutton"
+                    on:click={async () => {
                 // ask the user if they are sure
                 // delete the file/folder
                 let answer = Swal.fire({
@@ -123,10 +125,11 @@
                     await removeFile(fullFp);
                 }
             }}
-        >
-            <TrashSimple class="w-6 h-6" />
-            <span class="text-md font-normal text-white">Löschen</span>
-        </button>
+            >
+                <TrashSimple class="w-6 h-6"/>
+                <span class="text-md font-normal text-white">Löschen</span>
+            </button>
+        {/if}
     </div>
 </div>
 
