@@ -22,9 +22,7 @@ function fileAbsoluteToRelativeUnix(base: string, file: string): string {
 }
 
 export function workspaceUrlToName(url: string): string {
-    if (url.includes("\\")) {
-        return workspaceUrlToNameNt(url)
-    }
+    url = url.replaceAll("\\", "/")
     return workspaceUrlToNameUnix(url)
 }
 

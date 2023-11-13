@@ -10,7 +10,7 @@
     import {workspace} from "./stores";
     import {onDestroy, onMount} from "svelte";
 
-    let loading = false
+    let loading = true
     let w = 0;
     let h = 0;
     let stop = false;
