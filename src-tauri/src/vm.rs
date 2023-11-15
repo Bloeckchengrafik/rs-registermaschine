@@ -125,7 +125,9 @@ impl VirtualMachine {
     }
 
     fn resize_memory(&mut self, size: u32) {
-        self.memory.resize(size as usize, 0);
+        if size as usize > self.memory.len() {
+            self.memory.resize(size as usize, 0);
+        }
     }
 
     fn compute_ptr_type(&self, arg: String, line_nr: u32, file_name: String) -> Result<PtrType, CompileError> {
@@ -296,6 +298,7 @@ impl VirtualMachine {
                 // check if a comment is present
                 if let Some(token) = tokens.clone().next() {
                     if token.starts_with("#") {
+                        line_number += 1;
                         continue;
                     }
                 }
@@ -366,7 +369,14 @@ impl VirtualMachine {
     pub fn step(&mut self) -> Result<ExecutionResult, ExecutionError> {
         // Check for a pointer overrun
         if self.line_ptr >= self.lines.len() as u32 {
-            return Err(ExecutionError::EndMarkerMissing);
+            return Ok(ExecutionResult::End {
+                line: Diagnostics {
+                    line: self.lines[self.line_ptr as usize - 1].line_number.clone(),
+                    file: self.lines[self.line_ptr as usize - 1].file_name.clone(),
+                },
+                register: self.memory.clone(),
+                accumulator: self.accumulator,
+            });
         }
 
         // Skip empty lines & labels
@@ -391,7 +401,9 @@ impl VirtualMachine {
             Instruction::Sub(ptr) => {
                 let value: u32 = self.resolve_ptr(ptr)?;
 
-                self.accumulator = self.accumulator - value;
+                if value <= self.accumulator {
+                    self.accumulator = self.accumulator - value;
+                }
                 self.line_ptr += 1;
                 Ok(executed!(line.file_name.clone(), line.line_number.clone(), self.memory.clone(), self.accumulator))
             }
